@@ -1,0 +1,4 @@
+interface:
+  display_name: "Itinerary Generator"
+  short_description: "Generate .docx travel itineraries from .doc files"
+  default_prompt: "Use $itinerary-generator to create a formatted travel itinerary DOCX from this .doc file."
