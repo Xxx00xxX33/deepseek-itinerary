@@ -49,14 +49,59 @@ Extract these fields for each day:
 
 ### 3. Expand descriptions
 
-Convert terse bullet points into **100-150 Chinese characters** of factual description suitable for **foreign travelers** who do not know Chinese culture:
+Convert terse bullet points into **100-150 Chinese characters** of factual description suitable for **foreign travelers** who do not know Chinese culture.
 
-| Do | Don't |
-|----|-------|
-| "What this place is" (type, history, size) | "Beautiful", "stunning", "poetic" |
-| "Why it is famous" (UNESCO, 5A, historical) | Vague praise |
-| "What visitors can see/do" | Flowery language |
-| "Practical info" (seasonal timing, transportation) | Assumed cultural knowledge |
+#### The Three Rules
+
+1. **Count characters precisely.** 100-150 Chinese characters is the target. Fewer than 100 reads as too thin; more than 150 becomes excessive. Use a counting tool (`sum(1 for c in text if '\u4e00' <= c <= '\u9fff')`) to verify every description. The first version of a real itinerary failed because most descriptions were only 70-98 characters.
+
+2. **Describe, do not praise.** Foreign readers have no emotional connection to the place — telling them it is "beautiful", "stunning", "poetic", or "breathtaking" tells them nothing. Instead, tell them concretely what they are looking at and why it matters.
+
+3. **Assume zero cultural knowledge.** Do not assume the reader knows who historical figures are (姜太公, 梅兰芳), what architectural terms mean (文人园林, 回廊, 石舫), or why events matter. Every reference needs a one-sentence explanation of its context.
+
+#### The Four-Part Structure
+
+Every description should answer these four questions, in order:
+
+| # | Question | What to write | Example |
+|---|----------|---------------|---------|
+| 1 | **What is this?** | Place type (temple, lake, museum, garden, street) and basic facts (size, age, location) | "尚湖是常熟最大的湖泊景区，被评为国家5A级旅游景区。" |
+| 2 | **Why is it famous?** | UNESCO/5A rating, historical significance, unique feature | "瘦西湖2014年被列入世界文化遗产名录（大运河沿线遗产点）。" |
+| 3 | **What can I see/do?** | Observable features, activities, practical layout | "乘坐竹筏沿水道穿行于杉林之间，水面倒映树影，光线从树冠缝隙洒下。" |
+| 4 | **Any practical info?** | Seasonal timing, self-paid items, note closures | "周一闭馆" / "4月牡丹节期间数百个品种盛开" |
+
+Not every description needs all four parts, but **Q1 + Q3 are mandatory** for every sight.
+
+#### Writing Examples
+
+**Bad (praise, no substance, 89 chars):**
+> 瘦西湖以"瘦"为美，湖面狭长曲折，两岸花柳依水。漫步湖畔，一步一景，处处是诗。
+
+This fails all three rules: it praises, assumes knowledge of Chinese poetry, and tells the reader nothing factual.
+
+**Good (factual, informative, 118 chars):**
+> 瘦西湖是扬州最核心的景区，2014年被列入世界文化遗产名录。湖区呈狭长形，沿湖分布五亭桥、白塔、二十四桥等清代建筑，这些建筑各有其历史典故和造型特色。园内植被丰富，4月万花园百花盛开，10月底至11月中旬举办菊花展。
+
+This passes: it names the place type (景区), explains its fame (UNESCO), lists what you see (五亭桥、白塔), and gives practical dates (菊花展).
+
+#### Before-and-After Fixes from Real Iteration
+
+| Sight | Before (bad) | After (fixed) |
+|-------|-------------|---------------|
+| 梅兰芳纪念馆 | "庭院清雅，梅花点缀，处处流露京剧文化底蕴" | "梅兰芳是京剧'四大名旦'之首，以男性演员演绎女性角色的精湛技艺享誉世界。纪念馆位于泰州故居原址，馆内陈列了大量演出剧照、戏服和生平资料，可以了解这位艺术大师的舞台生涯。" |
+| 凤城河 | "桨声灯影里品味泰州水城慢生活" | "凤城河是环绕泰州古城的护城河，夜游乘坐中式画舫沿河道行驶，可以观赏两岸古建筑和桥梁在灯光下的倒影。船程约40分钟，船上播放讲解，介绍沿岸的历史建筑。" |
+| 乔园 | "亭榭廊桥、曲径通幽，一步一景" | "乔园是泰州现存最古老的私家园林，始建于明代，属于典型的江南文人园林风格。园内以假山、水池、亭廊为主要元素，空间虽不大但布局紧凑，回廊曲折。" |
+
+#### Verification
+
+After writing all descriptions, run a character count check:
+
+```python
+for sight in day.sights:
+    cn = sum(1 for c in sight.description if '\u4e00' <= c <= '\u9fff')
+    if cn < 100 or cn > 150:
+        print(f'WARNING: {sight.name} has {cn} chars (target 100-150)')
+```
 
 ### 4. Generate the DOCX
 
