@@ -1,5 +1,5 @@
 ---
-name: itinerary-generator
+name: deepseek-itinerary
 description: >
   Generate professionally formatted travel itinerary DOCX files from source
   .doc itinerary documents. Use when: (1) you have a .doc itinerary table and

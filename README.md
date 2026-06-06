@@ -12,7 +12,7 @@ Convert raw `.doc` travel itinerary tables into beautifully formatted `.docx` do
 ## What's Inside
 
 ```
-itinerary-generator/
+deepseek-itinerary/
 ├── SKILL.md                    # Main instructions for Codex
 ├── agents/openai.yaml        # Skill metadata
 ├── scripts/generate.py        # Python template for generating .docx
