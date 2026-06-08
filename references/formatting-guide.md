@@ -8,10 +8,12 @@ A quick reference of code patterns used in the itinerary generator.
 from docx.shared import Cm
 from docx.enum.table import WD_TABLE_ALIGNMENT
 
-t = doc.add_table(rows=1, cols=3)
+t = doc.add_table(rows=1, cols=2)
 t.style = 'Table Grid'  # REQUIRED for borders
 t.alignment = WD_TABLE_ALIGNMENT.CENTER
 ```
+
+**Important:** Itinerary tables use exactly 2 columns — "Time" and "Highlights". There is NO third "Meals/Notes" column. Meals go only in the `[Meals]` summary row at the bottom.
 
 ## Cell Shading (Background Color)
 
@@ -20,10 +22,35 @@ from docx.oxml.ns import qn, nsdecls
 from docx.oxml import parse_xml
 
 def set_cell_shading(cell, color):
+    # IMPORTANT: remove existing shd first to avoid duplicates
+    NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    tcPr = cell._tc.get_or_add_tcPr()
+    for existing in tcPr.findall('{%s}shd' % NS):
+        tcPr.remove(existing)
     shading_elm = parse_xml(
         '<w:shd {} w:fill="{}"/>'.format(nsdecls("w"), color)
     )
-    cell._tc.get_or_add_tcPr().append(shading_elm)
+    tcPr.append(shading_elm)
+```
+
+## Cell Vertical Alignment
+
+```python
+from docx.oxml.ns import qn, nsdecls
+from docx.oxml import parse_xml
+
+def set_cell_va(cell, align='center'):
+    """Set cell vertical alignment.
+    IMPORTANT: pass 'center' as string, NOT WD_ALIGN_VERTICAL.CENTER
+    (the enum serializes as 'CENTER (1)' which Word rejects)
+    """
+    NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    tcPr = cell._tc.get_or_add_tcPr()
+    for existing in tcPr.findall('{%s}vAlign' % NS):
+        tcPr.remove(existing)
+    tcPr.append(
+        parse_xml('<w:vAlign {} w:val="{}"/>'.format(nsdecls("w"), align))
+    )
 ```
 
 ## Adding Formatted Text to a Cell
@@ -53,17 +80,17 @@ def add_formatted_paragraph(cell, text, font_name='Arial', size=Pt(10), bold=Fal
 ## Merging Cells
 
 ```python
-# Merge all 3 cells in a row (for free-day rows, etc.)
+# For a free-day row: merge both cells in the row
 row = table.add_row()
-row.cells[0].merge(row.cells[2])
+row.cells[0].merge(row.cells[1])
 ```
 
 ## Setting Column Widths
 
 ```python
-cells[0].width = Cm(2.2)
-cells[1].width = Cm(11.5)
-cells[2].width = Cm(3.3)
+# 2-column layout: time column (narrow) + sight column (wide)
+cells[0].width = Cm(2.5)
+cells[1].width = Cm(14.5)
 ```
 
 ## Day Header with Badge
