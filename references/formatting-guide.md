@@ -20,10 +20,35 @@ from docx.oxml.ns import qn, nsdecls
 from docx.oxml import parse_xml
 
 def set_cell_shading(cell, color):
+    # IMPORTANT: remove existing shd first to avoid duplicates
+    NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    tcPr = cell._tc.get_or_add_tcPr()
+    for existing in tcPr.findall('{%s}shd' % NS):
+        tcPr.remove(existing)
     shading_elm = parse_xml(
         '<w:shd {} w:fill="{}"/>'.format(nsdecls("w"), color)
     )
-    cell._tc.get_or_add_tcPr().append(shading_elm)
+    tcPr.append(shading_elm)
+```
+
+## Cell Vertical Alignment
+
+```python
+from docx.oxml.ns import qn, nsdecls
+from docx.oxml import parse_xml
+
+def set_cell_va(cell, align='center'):
+    """Set cell vertical alignment.
+    IMPORTANT: pass 'center' as string, NOT WD_ALIGN_VERTICAL.CENTER
+    (the enum serializes as 'CENTER (1)' which Word rejects)
+    """
+    NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    tcPr = cell._tc.get_or_add_tcPr()
+    for existing in tcPr.findall('{%s}vAlign' % NS):
+        tcPr.remove(existing)
+    tcPr.append(
+        parse_xml('<w:vAlign {} w:val="{}"/>'.format(nsdecls("w"), align))
+    )
 ```
 
 ## Adding Formatted Text to a Cell
@@ -107,17 +132,12 @@ section.right_margin = Cm(2.0)
 
 ### Unicode escapes in Python source
 
-When writing Chinese characters as `\uXXXX` escapes, each Chinese character is one escape:
-
-```python
-# '瘦西湖' = \u7626\u897f\u6e56
-text = '\u7626\u897f\u6e56\u662f\u626c\u5dde\u6700\u6838\u5fc3\u7684\u666f\u533a'
-```
+When writing Chinese characters as `\uXXXX` escapes, each Chinese character is one escape.
 
 ### Emoji handling
 
-- Surrogate pairs (`\uD83C\uDF7D`) will crash with `surrogates not allowed`
-- Use `\U0001F37D` (full 8-hex-digit form) or plain text labels
+- Surrogate pairs will crash with `surrogates not allowed`
+- Use full Unicode codepoint or plain text labels
 
 ### Reading .doc files
 

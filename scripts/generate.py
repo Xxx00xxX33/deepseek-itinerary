@@ -2,6 +2,11 @@
 """
 Template: Generate travel itinerary DOCX from structured data.
 Customize for each itinerary: edit DAYS list and run.
+
+Run with:
+    PYTHONIOENCODING=utf-8 python scripts/generate.py
+
+Before re-running, delete the old output file if Word has it open.
 """
 from docx import Document
 from docx.shared import Pt, Cm, RGBColor
@@ -10,15 +15,18 @@ from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.oxml.ns import qn, nsdecls
 from docx.oxml import parse_xml
 import os
+import re
+import zipfile
+import shutil
 
-# ── CONFIG ──────────────────────────────────────────────
-FONT = 'Arial'       # Use 'Arial' for English, 'Microsoft YaHei' (微软雅黑) for Chinese
+# -- CONFIG --
+FONT = 'Arial'       # Use 'Arial' for English, 'Microsoft YaHei' for Chinese
 OUTPUT_FILE = 'itinerary.docx'
 TITLE = 'Your Trip Title'
 SUBTITLE = 'City1 \u00b7 City2 \u00b7 City3'
 DAYS = []            # Populate with Day objects (see below)
 
-# ── COLOR PALETTE ───────────────────────────────────────
+# -- COLOR PALETTE --
 DEEP_BLUE   = RGBColor(0x1A, 0x3C, 0x6E)
 DARK_GREEN  = RGBColor(0x2E, 0x6B, 0x4F)
 WARM_GOLD   = RGBColor(0xB8, 0x86, 0x2C)
@@ -32,14 +40,29 @@ BG_WARM     = 'FEF6E9'
 BG_GREEN    = 'E8F5ED'
 BG_RED      = 'FFF1F0'
 
-# ── HELPERS ─────────────────────────────────────────────
+# -- HELPERS --
 
 def set_shading(cell, color):
-    cell._tc.get_or_add_tcPr().append(
+    """Set cell background. Removes existing shd to avoid duplicates."""
+    NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    tcPr = cell._tc.get_or_add_tcPr()
+    for existing in tcPr.findall('{%s}shd' % NS):
+        tcPr.remove(existing)
+    tcPr.append(
         parse_xml('<w:shd {} w:fill="{}"/>'.format(nsdecls("w"), color)))
 
-def mkp(cell, text, sz=10, bold=False, color=DARK_GRAY, align=WD_ALIGN_PARAGRAPH.LEFT,
-        sb=0, sa=0, ls=1.3):
+def set_cell_va(cell, align='center'):
+    """Set vertical alignment. Pass 'center' as string, NOT the enum."""
+    NS = 'http://schemas.openxmlformats.org/wordprocessingml/2006/main'
+    tcPr = cell._tc.get_or_add_tcPr()
+    for existing in tcPr.findall('{%s}vAlign' % NS):
+        tcPr.remove(existing)
+    tcPr.append(
+        parse_xml('<w:vAlign {} w:val="{}"/>'.format(nsdecls("w"), align)))
+
+def add_run_to_cell(cell, text, sz=10, bold=None, color=DARK_GRAY,
+                    align=WD_ALIGN_PARAGRAPH.LEFT, sb=0, sa=0, ls=1.3):
+    """Add a paragraph with a run to a cell. bold=None = no <w:b/> element emitted."""
     p = cell.add_paragraph()
     p.alignment = align
     p.paragraph_format.space_before = sb
@@ -49,13 +72,44 @@ def mkp(cell, text, sz=10, bold=False, color=DARK_GRAY, align=WD_ALIGN_PARAGRAPH
     r.font.name = FONT
     r._element.rPr.rFonts.set(qn('w:eastAsia'), FONT)
     r.font.size = Pt(sz)
-    r.font.bold = bold
+    if bold is not None:
+        r.font.bold = bold
     r.font.color.rgb = color
     return p
 
-# ═══════════════════════════════════════════════════════
-# DATA MODEL - populate DAYS list below
-# ═══════════════════════════════════════════════════════
+def cleanup_docx(filepath):
+    """Remove customXml, thumbnail, stylesWithEffects that can break Word."""
+    tmp = filepath + '.tmp'
+    with zipfile.ZipFile(filepath, 'r') as zin:
+        ct = zin.read('[Content_Types].xml').decode('utf-8')
+        ct = re.sub(r'<Override[^>]*?customXml[^>]*?/>', '', ct)
+        ct = re.sub(r'<Override[^>]*?stylesWithEffects[^>]*?/>', '', ct)
+        ct = re.sub(r'<Default[^>]*?jpeg[^>]*?/>', '', ct)
+
+        doc_rels = zin.read('word/_rels/document.xml.rels').decode('utf-8')
+        doc_rels = re.sub(r'<Relationship[^>]*?customXml[^>]*?/>', '', doc_rels)
+        doc_rels = re.sub(r'<Relationship[^>]*?stylesWithEffects[^>]*?/>', '', doc_rels)
+
+        main_rels = zin.read('_rels/.rels').decode('utf-8')
+        main_rels = re.sub(r'<Relationship[^>]*?thumbnail[^>]*?/>', '', main_rels)
+
+        with zipfile.ZipFile(tmp, 'w', zipfile.ZIP_DEFLATED) as zout:
+            for item in zin.infolist():
+                fname = item.filename
+                if any(x in fname for x in ['customXml', 'stylesWithEffects',
+                                              'thumbnail', 'item1.xml']):
+                    continue
+                if fname == '[Content_Types].xml':
+                    zout.writestr(fname, ct.encode('utf-8'))
+                elif fname == 'word/_rels/document.xml.rels':
+                    zout.writestr(fname, doc_rels.encode('utf-8'))
+                elif fname == '_rels/.rels':
+                    zout.writestr(fname, main_rels.encode('utf-8'))
+                else:
+                    zout.writestr(item, zin.read(fname))
+    shutil.move(tmp, filepath)
+
+# DATA MODEL
 
 class Sight:
     def __init__(self, time, name, description, meal=None, note=None):
@@ -69,13 +123,11 @@ class Day:
     def __init__(self, num, route, sights, hotel, meals_summary=None):
         self.num = num
         self.route = route
-        self.sights = sights  # list of Sight objects
+        self.sights = sights
         self.hotel = hotel
         self.meals_summary = meals_summary
 
-# ═══════════════════════════════════════════════════════
 # GENERATION ENGINE
-# ═══════════════════════════════════════════════════════
 
 def generate(days, title, subtitle, output_path):
     doc = Document()
@@ -85,6 +137,8 @@ def generate(days, title, subtitle, output_path):
         _add_day(doc, day)
     doc.save(output_path)
     print('OK - Saved:', output_path)
+    cleanup_docx(output_path)
+    print('OK - Cleaned up package')
 
 def _setup_page(doc):
     s = doc.sections[0]
@@ -135,7 +189,6 @@ def _add_title_page(doc, title, subtitle):
     doc.add_page_break()
 
 def _add_day(doc, day):
-    # Day header
     t = doc.add_table(rows=1, cols=1)
     t.alignment = WD_TABLE_ALIGNMENT.CENTER
     t.style = 'Table Grid'
@@ -162,13 +215,12 @@ def _add_day(doc, day):
     rr.font.bold = True
     rr.font.color.rgb = DEEP_BLUE
 
-    # Detail table
     tbl = doc.add_table(rows=1, cols=3)
     tbl.style = 'Table Grid'
     tbl.alignment = WD_TABLE_ALIGNMENT.CENTER
     for i, txt in enumerate(['Time', 'Highlights', 'Meals/Notes']):
-        mkp(tbl.rows[0].cells[i], txt, sz=9, bold=True, color=WHITE,
-            align=WD_ALIGN_PARAGRAPH.CENTER, sb=4, sa=4)
+        add_run_to_cell(tbl.rows[0].cells[i], txt, sz=9, bold=True, color=WHITE,
+                        align=WD_ALIGN_PARAGRAPH.CENTER, sb=4, sa=4)
         set_shading(tbl.rows[0].cells[i], DEEP_BLUE_HEX)
     tbl.rows[0].cells[0].width = Cm(2.2)
     tbl.rows[0].cells[1].width = Cm(11.5)
@@ -176,20 +228,18 @@ def _add_day(doc, day):
 
     for sight in day.sights:
         _add_sight(tbl, sight)
-
     if day.meals_summary:
         _add_meal_row(tbl, day.meals_summary)
-
     _add_hotel_row(tbl, day.hotel)
     doc.add_paragraph('')
 
 def _add_sight(tbl, sight):
     row = tbl.add_row()
     cs = row.cells
-    mkp(cs[0], sight.time, sz=9, bold=True, color=DEEP_BLUE,
-        align=WD_ALIGN_PARAGRAPH.CENTER, sb=4, sa=4)
+    add_run_to_cell(cs[0], sight.time, sz=9, bold=True, color=DEEP_BLUE,
+                    align=WD_ALIGN_PARAGRAPH.CENTER, sb=4, sa=4)
     set_shading(cs[0], BG_LIGHT)
-    pn = mkp(cs[1], '', sz=10, sb=2, sa=2)
+    pn = add_run_to_cell(cs[1], '', sz=10, sb=2, sa=2)
     rn = pn.add_run(sight.name)
     rn.font.name = FONT
     rn._element.rPr.rFonts.set(qn('w:eastAsia'), FONT)
@@ -197,13 +247,13 @@ def _add_sight(tbl, sight):
     rn.font.bold = True
     rn.font.color.rgb = DARK_GREEN
     if sight.description:
-        mkp(cs[1], sight.description, sz=9, color=MEDIUM_GRAY, sb=2, sa=4, ls=1.4)
+        add_run_to_cell(cs[1], sight.description, sz=9, color=MEDIUM_GRAY, sb=2, sa=4, ls=1.4)
     if sight.meal:
-        mkp(cs[2], sight.meal, sz=9, color=MEDIUM_GRAY,
-            align=WD_ALIGN_PARAGRAPH.CENTER, sb=4, sa=4)
+        add_run_to_cell(cs[2], sight.meal, sz=9, color=MEDIUM_GRAY,
+                        align=WD_ALIGN_PARAGRAPH.CENTER, sb=4, sa=4)
     if sight.note:
-        mkp(cs[2], sight.note, sz=8, color=LIGHT_GRAY,
-            align=WD_ALIGN_PARAGRAPH.CENTER, sb=2, sa=2)
+        add_run_to_cell(cs[2], sight.note, sz=8, color=LIGHT_GRAY,
+                        align=WD_ALIGN_PARAGRAPH.CENTER, sb=2, sa=2)
     set_shading(cs[2], BG_WARM)
     cs[0].width = Cm(2.2)
     cs[1].width = Cm(11.5)
@@ -214,9 +264,9 @@ def _add_meal_row(tbl, txt):
     cs = row.cells
     for c in cs:
         set_shading(c, BG_GREEN)
-    mkp(cs[0], '[Meals]', sz=9, bold=True, color=DARK_GREEN,
-        align=WD_ALIGN_PARAGRAPH.CENTER, sb=3, sa=3)
-    mkp(cs[1], txt, sz=9, sb=3, sa=3)
+    add_run_to_cell(cs[0], '[Meals]', sz=9, bold=True, color=DARK_GREEN,
+                    align=WD_ALIGN_PARAGRAPH.CENTER, sb=3, sa=3)
+    add_run_to_cell(cs[1], txt, sz=9, sb=3, sa=3)
     cs[0].width = Cm(2.2)
     cs[1].width = Cm(11.5)
     cs[2].width = Cm(3.3)
@@ -226,16 +276,14 @@ def _add_hotel_row(tbl, txt):
     cs = row.cells
     for c in cs:
         set_shading(c, BG_RED)
-    mkp(cs[0], '[Hotel]', sz=9, bold=True, color=RGBColor(0xCC, 0x33, 0x33),
-        align=WD_ALIGN_PARAGRAPH.CENTER, sb=3, sa=3)
-    mkp(cs[1], txt, sz=9, sb=3, sa=3)
+    add_run_to_cell(cs[0], '[Hotel]', sz=9, bold=True, color=RGBColor(0xCC, 0x33, 0x33),
+                    align=WD_ALIGN_PARAGRAPH.CENTER, sb=3, sa=3)
+    add_run_to_cell(cs[1], txt, sz=9, sb=3, sa=3)
     cs[0].width = Cm(2.2)
     cs[1].width = Cm(11.5)
     cs[2].width = Cm(3.3)
 
-# ═══════════════════════════════════════════════════════
 # RUN
-# ═══════════════════════════════════════════════════════
 
 if __name__ == '__main__':
     generate(DAYS, TITLE, SUBTITLE, OUTPUT_FILE)
