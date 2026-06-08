@@ -51,13 +51,15 @@ Extract these fields for each day:
 
 Convert terse bullet points into **100-150 Chinese characters** of factual description suitable for **foreign travelers** who do not know Chinese culture.
 
-#### The Three Rules
+#### Core Rules
 
 1. **Count characters precisely.** 100-150 Chinese characters is the target. Fewer than 100 reads as too thin; more than 150 becomes excessive. Use a counting tool to verify every description. The first version of a real itinerary failed because most descriptions were only 70-98 characters.
 
 2. **Describe, do not praise.** Foreign readers have no emotional connection to the place. Tell them concretely what they are looking at and why it matters.
 
 3. **Assume zero cultural knowledge.** Do not assume the reader knows who historical figures are, what architectural terms mean, or why events matter. Every reference needs a one-sentence explanation of its context.
+
+4. **Never comment on physical difficulty or pace.** Phrases like "全程步行轻松" (the walk is easy throughout), "适合拍照" (great for photos), or "值得一游" (worth a visit) are subjective judgments that waste characters and tell the reader nothing factual. Describe the path objectively — its length, surface, and gradient — and let readers decide for themselves.
 
 #### The Four-Part Structure
 
