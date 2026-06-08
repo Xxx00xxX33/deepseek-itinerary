@@ -155,6 +155,35 @@ Meals are **never** placed in the sight rows. They appear only in the dedicated 
 
 **Critical: meals must NOT appear in sight rows or in a third column.** They only appear in the `[Meals]` row. This avoids duplication and keeps the sight content column wide and readable.
 
+### Day Spacing — No Blank Lines Between Days
+
+- **每天行程之间不得出现可见空行。** There must be NO visible blank paragraphs, empty lines, spacers, or separators between the end of one day and the start of the next.
+- The `[Hotel]` row of the previous day must sit directly above the D-xx header of the next day, with zero vertical gap.
+- Do NOT add `doc.add_paragraph('')`, `doc.add_paragraph()`, or any spacer paragraph after the day's detail table or after the `[Hotel]` row.
+- The D-xx day-header table itself acts as the visual separator between days. No extra blank space is needed.
+- Inside a single day: no empty paragraphs between sight rows, `[Meals]`, or `[Hotel]`.
+
+**Correct structure (in code):**
+```python
+# End of day block — do NOT add doc.add_paragraph('') here
+_add_hotel_row(tbl, day.hotel)
+# Next iteration of the day loop starts immediately — no spacer
+```
+
+**Correct structure (in output):**
+```
+[Hotel]  国际五星 · 泰州万怡酒店
+D-03  泰州 → 扬州
+[上午]  ...
+```
+
+**Wrong structure (do NOT produce):**
+```
+[Hotel]  国际五星 · 泰州万怡酒店
+           ← blank paragraph — NOT ALLOWED
+D-03  泰州 → 扬州
+```
+
 ## Critical Pitfalls (read carefully before coding)
 
 ### Emoji characters

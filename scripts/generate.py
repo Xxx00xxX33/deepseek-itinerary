@@ -238,7 +238,6 @@ def _add_day(doc, day):
         _add_meal_row(tbl, day.meals_summary)
 
     _add_hotel_row(tbl, day.hotel)
-    doc.add_paragraph('')
 
 def _add_sight(tbl, sight):
     row = tbl.add_row()
