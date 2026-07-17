@@ -1,0 +1,8 @@
+interface:
+  display_name: "Itinerary Generator (Voyage)"
+  short_description: "Voyage-style itinerary DOCX from 华宇/供应商报价 .doc — quote-only facts"
+  default_prompt: >
+    Use $deepseek-itinerary to produce a Voyage-style travel itinerary DOCX from this
+    quote .doc. Clone a known-good Voyage template for layout; never invent sights,
+    services, meals, hotels, or prices. Output next to the source file. Fact-check
+    before save (references/fact-check.md).
