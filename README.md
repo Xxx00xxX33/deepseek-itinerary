@@ -18,7 +18,8 @@ deepseek-itinerary/
 ├── scripts/
 │   ├── extract_doc.py                    # .doc text via olefile (WPS-safe)
 │   ├── generate.py                       # Voyage-style generator template
-│   └── generate_chaoshan6_voyage_style.py  # Worked example (潮汕 6 天)
+│   ├── generate_chaoshan6_voyage_style.py  # Worked example (潮汕 6 天)
+│   └── generate_shanwei_huaxiang.py      # Advanced: page break + 60-70 char attractive intros
 └── references/
     ├── formatting-guide.md               # Paragraph helpers, day-bar shading
     └── fact-check.md                     # Pre-delivery checklist
