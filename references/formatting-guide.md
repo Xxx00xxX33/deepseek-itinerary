@@ -8,17 +8,18 @@ Paragraph-flow layout matching 东北草原 / Voyage client docs.
 ```python
 from docx.shared import RGBColor
 
-C_TITLE  = RGBColor(0x1A, 0x6B, 0x5E)  # title, 宿, labels
+C_TITLE  = RGBColor(0x1A, 0x6B, 0x5E)  # title, 宿, 【景点名】
 C_SUB    = RGBColor(0x55, 0x55, 0x55)  # city line
 C_ORANGE = RGBColor(0xC4, 0x59, 0x11)  # 全程不进店
 C_HL     = RGBColor(0x41, 0x9D, 0x99)  # optional highlight
-C_FOOD   = RGBColor(0x2E, 0x8B, 0x7A)  # food / gift accent
+C_TEAL   = RGBColor(0x00, 0x80, 0x80)  # 亮点/美食/赠送 in some revised samples
+C_FOOD   = RGBColor(0x2E, 0x8B, 0x7A)  # food / gift accent (alt)
 C_DAY_BG = '2E8B7A'                    # day bar fill (hex string)
 C_WHITE  = RGBColor(0xFF, 0xFF, 0xFF)
 C_BODY   = RGBColor(0x00, 0x00, 0x00)
 C_HOTEL  = RGBColor(0x1A, 0x6B, 0x5E)
 
-FONT_CN  = 'SimSun'
+FONT_CN  = 'SimSun'            # or '宋体' if the shell uses that literal
 FONT_DAY = 'Arial Unicode MS'
 ```
 
@@ -156,13 +157,46 @@ def add_label_value(doc, label: str, value: str, *, before=2, after=2):
 
 ## Document structure order
 
-1. Title (center, ~18pt, `C_TITLE`)
+1. Title (center, ~18–20pt, `C_TITLE`)
 2. City line (center, `C_SUB`)
-3. Shopping / no-shop note (center, `C_ORANGE`)
-4. `独家安排：` / `各地美食：` / `赠送：` label blocks
-5. For each day: day bar → summary → `【景点】` lines → `宿：…`
-6. `报价与说明` + pricing / 购物 / 小费 / 备注 / 酒店 / 膳食
-7. `联系方式`
+3. Shopping / no-shop note (center, `C_ORANGE`) — only if source has it
+4. 特别安排 / 亮点行（常见 `008080` 或 `1A6B5E`，以样例为准）
+5. `各地美食：` / `赠送：`（常见 teal 加粗）
+6. For each day: day bar → summary → `【景点】` lines → `宿：…`
+7. Optional `报价与说明` — **omit entirely** if user forbids 报价
+8. `联系方式` only when source lists contacts
+
+Day bar text often includes a date prefix when the approved draft has it:
+
+```text
+06Dec Day 1  新加坡→重庆    （午：X｜晚：X）
+```
+
+## Learning a user-revised DOCX
+
+When the user says「学习这个修改好的版本 / 完全复刻字体颜色」:
+
+1. Open that DOCX as `TEMPLATE` (not the generic 东北草原 file, unless it is the sample).
+2. Dump each paragraph: `w:shd@w:fill`, first-run `w:color`, `w:sz`, `w:rFonts`, bold.
+3. Match Day fill (usually `2E8B7A`), Day font (`Arial Unicode MS`), body (`SimSun`/`宋体`).
+4. Keep header/logo by clearing body only (`sectPr` remains).
+5. Replace only the parts they ask to change (e.g. sight intros); keep structure/meals/hotels.
+
+### Sight intro quality
+
+| Bad | Good |
+|-----|------|
+| `【李子坝】游览李子坝轻轨穿楼。` | `【李子坝轻轨穿楼…】李子坝轻轨站因轨道从居民楼中间穿过而闻名。…` |
+| Full day paragraph pasted under every `【】` | One short **place** blurb per sight |
+| Praise: 值得一游 / 适合拍照 | Neutral: location, form, history, function |
+
+CJK length: if user asks 40–50 汉字不含标点, validate with `len(re.findall(r'[\u4e00-\u9fff]', text))`.
+
+## Colors note (teal variants)
+
+- Day bar fill in current Voyage samples: **`2E8B7A`**
+- Highlight/body accent in some client drafts: **`008080`**
+- Do not invent a third green; read from the shell you clone.
 
 ## Typography / readability
 
