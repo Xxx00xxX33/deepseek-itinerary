@@ -4,15 +4,18 @@ Run this **before** saving the final DOCX. Quote text (or `_quote_extract.txt`) 
 
 ## Pricing & policy
 
+**Default = no pricing block in the client DOCX.**
+
 ```
-[ ] If pricing is included: 团费 / 人 数字与报价一致（含币种 RMB）
-[ ] If pricing is included: 单间差 一致
-[ ] If pricing is included: 成团人数 / 16免1 / 领队单间规则 一致
-[ ] If pricing is included: 儿童占床 / 不占床比例 一致
-[ ] If pricing is included: 小费（如 RMB30/人天）一致
-[ ] If pricing is included: 报价有效期 + 避开节假日说明 一致
+[ ] Default path: 正文无团费/单房差/FOC/5850 等价格段、「报价与说明」标题可无
+[ ] Only if user explicitly asked to include 报价:
+[ ]   团费 / 人 数字与报价一致（含币种 RMB）
+[ ]   单间差 一致
+[ ]   成团人数 / 16免1 / 领队单间规则 一致
+[ ]   儿童占床 / 不占床比例 一致
+[ ]   小费（如 RMB30/人天）一致
+[ ]   报价有效期 + 避开节假日说明 一致
 [ ] 未写报价没有的「含机票」「含保险」「含于团费」等
-[ ] If user said「不要包含报价」: 正文无团费/单房差/FOC/5850 等价格段
 ```
 
 ## Days & logistics

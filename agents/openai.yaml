@@ -1,11 +1,11 @@
 interface:
   display_name: "Itinerary Generator (Voyage)"
-  short_description: "Voyage-style itinerary DOCX from 华宇/供应商报价 — quote-only facts, style-clone ready"
+  short_description: "Voyage-style itinerary DOCX — quote-only facts, default no pricing, style-clone ready"
   default_prompt: >
     Use $deepseek-itinerary to produce a Voyage-style travel itinerary DOCX from this
     quote .doc (or draft .docx). Clone a known-good Voyage template — or the user-revised
     sample if they ask to 复刻/学习修改版 — for layout, fonts, and colors. Never invent
-    sights, services, meals, hotels, or prices. Omit the pricing block when asked.
-    For foreign-traveler sight lines, write place descriptions (not 游览 restatements)
-    at the requested CJK length. Output next to the source file. Fact-check before save
-    (references/fact-check.md).
+    sights, services, meals, hotels, or prices. Default is NO pricing block; include 团费
+    / 单间差 only when the user explicitly asks. For foreign-traveler sight lines, write
+    place descriptions (not 游览 restatements) at the requested CJK length. Output next
+    to the source file. Fact-check before save (references/fact-check.md).

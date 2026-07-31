@@ -9,7 +9,7 @@ Default layout is **Voyage Ventures paragraph style** (teal day bars, 宿： lin
 
 The source quote is the **sole fact source**. Do not invent sights, services, meal standards, hotels, gifts, or prices.
 
-If the user says「不要包含报价」, omit the entire pricing block (no 团费 / 单房差 / FOC figures in the client file).
+**Default client output has NO pricing block** (no 团费 / 单房差 / FOC). Include prices only when the user explicitly asks（含报价 / 要团费）.
 
 ## Layout
 
@@ -77,11 +77,8 @@ Output goes **next to the source file**, with an optional ASCII-name copy.
 |-------|----------|
 | Word-open reliability | Clone known-good DOCX shell; clear body; rewrite paragraphs |
 | Style fidelity | Read fill/font/color from user sample XML when asked to 复刻 |
-| Day headers | Paragraph shading `#2E8B7A`, white text, Arial Unicode MS — not giant space padding |
-| Bold | Only set `bold=True`; never `bold=False` |
-| Chinese fonts | `SimSun` body, `Arial Unicode MS` day bars, set `w:eastAsia` |
 | Quote fidelity | Checklist before save; 赠送 ≠ itinerary activity |
-| No-price mode | Drop 报价与说明 block entirely when user forbids 报价 |
+| **No pricing (default)** | Omit 报价与说明 / 团费数字 unless user explicitly requests prices |
 | Readability | Strip junk spaces around `·` `/`; use `、` / `→` / `｜` |
 
 ## Deprecated

@@ -5,8 +5,10 @@ description: >
   Use when: (1) user has a .doc quote and wants a polished .docx itinerary;
   (2) /deepseek-itinerary; (3) 行程、报价转精美docx; (4) need Voyage-style layout
   (green day bars, paragraph flow, company header). Default style follows
-  12D11N东北草原-type docs — NOT the old blue table layout. Source quote is the
-  sole fact source: never invent sights, services, meals, hotels, or prices.
+  12D11N东北草原-type docs — NOT the old blue table layout. Default client
+  output is NO pricing block; include 团费/单间差 only when user explicitly asks.
+  Source quote is the sole fact source: never invent sights, services, meals,
+  hotels, or prices.
 ---
 
 # Itinerary Generator (Voyage style)
@@ -19,13 +21,13 @@ From a supplier **报价 .doc** (or an existing draft DOCX), produce a **readabl
 4. **Replicates fonts/colors exactly** when the user points at a modified sample DOCX.
 
 ## Absolute rules (fact fidelity)
-
 | Rule | Detail |
 |------|--------|
 | Quote is sole source | Every sight, meal, hotel, gift, fee, contact must appear in the quote |
 | No invented inclusions | Do not write「含机票」「含于团费」「无必加」unless the quote says so |
 | 赠送 vs 行程内 | Only items under 赠送 (or explicitly「赠送…」in day text) are gifts; DIY/表演 in day body are itinerary, not free gifts |
-| Prices exact | Copy RMB figures, 单间差, 小费, 儿童政策, 有效期 verbatim — **or omit the whole pricing block if user says「不要包含报价」** |
+| **Default: no pricing** | Client DOCX **omits** 报价与说明 / 团费 / 单间差 / FOC / 有效期价格段 by default. Include prices **only** when user explicitly asks（含报价 / 要团费 / INCLUDE_PRICING） |
+| Prices exact when included | If pricing is on: copy RMB figures, 单间差, 小费, 儿童政策, 有效期 verbatim |
 | No extra nights label | If quote says「6天」do not invent「5晚」unless nights are explicit |
 | Output to source dir | Write `.docx` next to the source file (and optional ASCII-name copy) |
 | Style clone | If user says「按某某行程排版 / 学习这个修改好的版本 / 完全复刻字体颜色」, open **that DOCX as the template shell** and match its run colors/fonts |
@@ -87,10 +89,8 @@ When the user attaches `…行程 (2).docx` / says「学习这个修改好的版
    - Title `#1A6B5E` SimSun bold ~20pt
    - Subtitle `#555555` SimSun bold 11pt
    - Highlights / food / gifts often `#008080` (teal)
-   - Day bar fill `#2E8B7A`, white text, **Arial Unicode MS**
-   - 宿： / 【景点名】 `#1A6B5E` bold
 4. **Shell:** `Document(user_revised.docx)` → clear body except `sectPr` → rewrite (keeps header/logo).
-5. **Only deviate where user asks** — e.g. replace stub sight lines with foreign-traveler place intros; drop pricing if requested.
+5. **Default still no pricing.** Only deviate on content the user asks for (e.g. place-style sight intros). Add 报价 block only if they explicitly want prices.
 
 ### 3. Parse quote fields
 
@@ -106,19 +106,19 @@ Per day:
 Global:
 
 - Product title, city list, 独家安排 / 亮点, 各地美食
-- 精选酒店总述
-- 报价、单间差、16免1、儿童、购物、小费、赠送、备注、联系人
-- Skip 报价 block entirely if user forbids prices
+- 精选酒店总述（可作行程说明，**默认不写团费数字**）
+- 赠送、备注（非价格）、联系人
+- 报价、单间差、16免1、儿童、小费、有效期：**仅当用户明确要求含报价时**解析并写入
 
 ### 4. Fact-check before save (mandatory)
 
 Checklist — every item must pass:
 
 ```
-[ ] 若输出含报价：团费 / 单间差 / 小费 / 儿童政策 / 有效期 数字一致
-[ ] 若用户要求无报价：正文无 5850/单房差/FOC 等价格段
+[ ] 默认无报价：正文无 5850/单房差/FOC/团费 RMB… 等价格段
+[ ] 仅当用户要求含报价：团费 / 单间差 / 小费 / 儿童政策 / 有效期 数字与报价一致
 [ ] 每日酒店名与星级一致
-[ ] 每日餐名与餐标数字一致（含「自理」）
+[ ] 每日餐名与餐标数字一致（含「自理」）— 餐标≠团费
 [ ] 景点列表 ⊆ 报价（无新增）
 [ ] 赠送栏未把行程内活动误标为赠送
 [ ] 未写报价没有的「含机票/含保险/无购物店外费用」等
@@ -143,8 +143,8 @@ Structure:
 【景点名】地点介绍…                 ← 名加粗深绿；介绍=地点说明，非「游览XXX」复述
 宿：酒店名（星级）                  ← 深绿加粗
 
-[可选] 报价与说明 / 行程说明
-联系方式（来源无则写「源报价未列联系人」，勿编造）
+[默认省略] 报价与说明 / 团费数字 — 仅当用户明确要求「含报价」时写入
+联系方式（来源无则省略；勿编造；通常也不放在默认无报价稿）
 ```
 
 #### Typography (readability)

@@ -154,7 +154,6 @@ def add_label_value(doc, label: str, value: str, *, before=2, after=2):
     set_run_font(r2, size_pt=10.5, color=C_BODY)
     return p
 ```
-
 ## Document structure order
 
 1. Title (center, ~18–20pt, `C_TITLE`)
@@ -163,8 +162,8 @@ def add_label_value(doc, label: str, value: str, *, before=2, after=2):
 4. 特别安排 / 亮点行（常见 `008080` 或 `1A6B5E`，以样例为准）
 5. `各地美食：` / `赠送：`（常见 teal 加粗）
 6. For each day: day bar → summary → `【景点】` lines → `宿：…`
-7. Optional `报价与说明` — **omit entirely** if user forbids 报价
-8. `联系方式` only when source lists contacts
+7. **`报价与说明` is OFF by default** — add only when user explicitly wants 报价
+8. `联系方式` only when source lists contacts (and usually with pricing-on mode)
 
 Day bar text often includes a date prefix when the approved draft has it:
 

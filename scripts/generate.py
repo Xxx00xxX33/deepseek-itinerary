@@ -4,14 +4,16 @@
 Template: Voyage-style travel itinerary DOCX.
 
 1. Set TEMPLATE to a known-good Voyage itinerary (keeps header/logo).
-2. Fill TITLE / SUBTITLE / DAYS / PRICING from the supplier quote only.
-3. Run:
+2. Fill TITLE / SUBTITLE / DAYS from the supplier quote only.
+3. Default is NO pricing block (INCLUDE_PRICING = False).
+   Set INCLUDE_PRICING = True and fill PRICING only when the user explicitly wants 报价.
+4. Run:
        PYTHONIOENCODING=utf-8 python scripts/generate.py
 
 Do NOT invent sights, meals, hotels, gifts, or prices.
 See references/fact-check.md before delivery.
 
-Worked example: generate_chaoshan6_voyage_style.py
+Worked examples: generate_chaoshan6_voyage_style.py, generate_chongqing_sanxia8_voyage_style.py
 """
 from __future__ import annotations
 
@@ -58,7 +60,11 @@ DAYS = [
         'hotel': '酒店名（五星）',  # or None on return day
     },
 ]
+# Default: client itinerary WITHOUT 报价数字段.
+# Set True only when user explicitly asks to include 报价 / 团费 / 单间差.
+INCLUDE_PRICING = False
 
+# Filled only when INCLUDE_PRICING is True — copy verbatim from quote.
 PRICING = {
     'main': '报价：RMB0/人，单间差RMB0，……（整句抄自报价）',
     'shopping': '全程不进店',
@@ -227,32 +233,35 @@ def build():
             add_para(doc, f'宿：{day["hotel"]}', size=10.5, bold=True, color=C_HOTEL,
                      before=4, after=2, left=2, line=1.1)
 
-    add_para(doc, '报价与说明', size=12, bold=True, color=C_TITLE,
-             before=12, after=6, line=1.1)
+    if INCLUDE_PRICING:
+        add_para(doc, '报价与说明', size=12, bold=True, color=C_TITLE,
+                 before=12, after=6, line=1.1)
 
-    add_para(doc, PRICING['main'], size=10.5, bold=True, color=C_BODY,
-             before=2, after=4, line=1.2)
-
-    if PRICING.get('shopping'):
-        add_label_value(doc, '购物：', PRICING['shopping'], before=1, after=1)
-    if PRICING.get('tip'):
-        add_label_value(doc, '小费：', PRICING['tip'], before=0, after=1)
-    if PRICING.get('gift_summary'):
-        add_label_value(doc, '赠送：', PRICING['gift_summary'], before=0, after=3)
-    if PRICING.get('note'):
-        add_para(doc, PRICING['note'], size=10.5, color=C_BODY,
+        add_para(doc, PRICING['main'], size=10.5, bold=True, color=C_BODY,
                  before=2, after=4, line=1.2)
-    if PRICING.get('hotels'):
-        add_para(doc, PRICING['hotels'], size=10.5, color=C_BODY,
-                 before=1, after=4, line=1.2)
-    if PRICING.get('meals'):
-        add_para(doc, PRICING['meals'], size=10.5, color=C_BODY,
-                 before=1, after=6, line=1.25)
 
-    add_para(doc, '联系方式', size=12, bold=True, color=C_TITLE,
-             before=4, after=3, line=1.1)
-    for line in PRICING.get('contacts') or []:
-        add_para(doc, line, size=10.5, color=C_BODY, before=0, after=1, line=1.15)
+        if PRICING.get('shopping'):
+            add_label_value(doc, '购物：', PRICING['shopping'], before=1, after=1)
+        if PRICING.get('tip'):
+            add_label_value(doc, '小费：', PRICING['tip'], before=0, after=1)
+        if PRICING.get('gift_summary'):
+            add_label_value(doc, '赠送：', PRICING['gift_summary'], before=0, after=3)
+        if PRICING.get('note'):
+            add_para(doc, PRICING['note'], size=10.5, color=C_BODY,
+                     before=2, after=4, line=1.2)
+        if PRICING.get('hotels'):
+            add_para(doc, PRICING['hotels'], size=10.5, color=C_BODY,
+                     before=1, after=4, line=1.2)
+        if PRICING.get('meals'):
+            add_para(doc, PRICING['meals'], size=10.5, color=C_BODY,
+                     before=1, after=6, line=1.25)
+
+        contacts = PRICING.get('contacts') or []
+        if contacts:
+            add_para(doc, '联系方式', size=12, bold=True, color=C_TITLE,
+                     before=4, after=3, line=1.1)
+            for line in contacts:
+                add_para(doc, line, size=10.5, color=C_BODY, before=0, after=1, line=1.15)
 
     first = OUTPUTS[0]
     os.makedirs(os.path.dirname(first) or '.', exist_ok=True)
