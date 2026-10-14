@@ -39,9 +39,10 @@ deepseek-itinerary/
 
 When the user asks for 外国游客 / 景点介绍:
 
-- Write **place descriptions**, not「游览XXX」restatements.
-- Default length when specified: **40–50 Chinese characters excluding punctuation** (count `[\u4e00-\u9fff]`).
-- No praise fluff (适合拍照 / 值得一游 / 轻松).
+- Write **vivid, experiential copy** for Singapore travelers: hook + on-site scene + 1–2 facts — not dry encyclopedia text, not「游览XXX」restatements.
+- Default length **~70–100 Chinese characters**; 40–50 only when the user asks for short intros.
+- Gloss dialect / cultural terms for overseas readers（摆龙门阵（聊天））.
+- English DOCX on request: same structure and tone (see SKILL.md).
 - Do not invent services not in the quote.
 
 ## Quick start

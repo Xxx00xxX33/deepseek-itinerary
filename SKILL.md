@@ -58,6 +58,7 @@ Worked examples:
 |--------|---------|
 | `scripts/generate_chaoshan6_voyage_style.py` | 潮汕 6 天 |
 | `scripts/generate_chongqing_sanxia8_voyage_style.py` | 重庆+长江三峡揽月 8D7N 上水 |
+| `scripts/generate_chengdu6_voyage_style.py` / `_en.py` | 漫游成都6日（卧龙）— 生动体验式文案 + 英文版 |
 
 ---
 
@@ -192,26 +193,54 @@ Keeps company **header/logo**, section margins, theme.
 
 ---
 
-## Sight introductions (foreign travelers)
+## Sight introductions & day narrative (Singapore travelers)
 
-When the user wants **景点介绍 / 针对外国游客**:
+Client readers are mostly **Singapore travelers**. Dry encyclopedia-style blurbs（「始建于X代，现存建筑为清代重建…」）do not interest them. **Default style = vivid, experiential copy**: what they will see, hear, taste and feel there — still with one or two solid facts as backbone.
+
+### Sight intros（【景点】后的描述）
 
 | Rule | Detail |
 |------|--------|
-| Length | Default **40–50 汉字（不含标点）** if user specifies that range; otherwise 100–150 only when asked |
-| Content | **Place description** — what/where/why it exists (立体交通、水利枢纽、溶洞、诗城…) |
-| Not allowed | Pure itinerary restatement:「游览XXX」「参观XXX」「上午经过XXX」as the whole blurb |
-| No praise fluff | No「适合拍照/值得一游/轻松/必去」 |
-| Facts | Prefer facts already in quote/day text; do not invent new tickets, shows, or free gifts |
-| Validate | Count CJK with `[\u4e00-\u9fff]` before save; fail build if out of range |
+| Length | Default **~70–100 汉字**. Use 40–50 only when the user explicitly asks for short intros |
+| Hook first | Open with an image or identity:「藏身闹市的千年古刹」「都江堰夜晚最梦幻的一幕」「想看最地道的成都日常，就来人民公园」 |
+| Sensory scene | Concrete things on site: 红灯笼、青石板、竹椅盖碗茶、熊猫啃竹子打滚、灯光倒映江面 |
+| One fact backbone | Keep 1–2 verifiable facts (年代、人物、世界遗产、名称由来) — woven in, not listed |
+| Memorable detail | Legends / icons travelers will look for: 摸铜羊讨好运、IFS「爬墙大熊猫」、三国主题街 |
+| Explain local terms | Dialect or cultural words get a bracket gloss for overseas readers:「摆龙门阵（聊天）」「巴适（舒服惬意）」 |
+| Not allowed | Whole blurb = itinerary restatement（「游览XXX」「上午参观XXX」） |
+| Facts guard | Describing what exists at a place（小吃、相亲角、酒吧街）is fine; never phrase it as an included service, meal, show or gift unless the quote says so. Quote-listed inclusions（电瓶车+讲解器、含茶）may be woven into the scene |
 
-Example (good):
+Example (good — vivid):
 
-> 三峡大坝是世界规模最大的水利枢纽。升船机以垂直升降方式运送船舶过坝；停运时改参观博物馆与截流纪念园。
+> 【卧龙神树坪基地（电瓶车+讲解器）】藏在卧龙国家级自然保护区深山里的大熊猫基地，云雾缭绕、竹林满坡，比城市里的熊猫园更接近它们的野外家园。乘电瓶车进入园区，戴上讲解器，看“滚滚”们啃竹子、爬树、打滚，萌态十足。
+
+> 【鹤茗茶社（含茶）】人民公园里的老字号露天茶馆，临湖摆满竹椅。捧一碗盖碗茶，看身边的成都人“摆龙门阵”（聊天），亲身体会“一杯茶坐一下午”的巴适（舒服惬意）生活。
+
+Example (bad — dry, encyclopedia only):
+
+> 成都保存较完整的佛教寺院，始建于隋代，现存殿宇为清代重建，是川西著名禅宗丛林。
 
 Example (bad — restatement only):
 
 > 上午参观游览三峡大坝，抵达三斗坪换乘游船过升船机。
+
+### Day overview（Day 条下的概述段）
+
+- Open with a **theme line** for the day:「今天走进成都的老城时光。」「今天是期待已久的熊猫之旅！」
+- Chain sights with light connectors（随后、再到、最后）and a short purpose per stop（探访道家文化、感受市井烟火）— sight order must match the quote.
+- Do **not** invent clock times（上午/傍晚/晚上）unless the quote has them or the sight is inherently nocturnal（夜景、蓝眼泪）.
+- Free day: add a gentle suggestion tied to facts already in the quote (e.g. hotel location) — never an optional tour or paid activity.
+- Departure day: warm close（带着满满的回忆，返回温暖的家——新加坡）.
+
+### English version
+
+When asked for an English DOCX: same structure (Day bars, 【Sight】 paragraphs, `Stay:` lines), same vivid tone, same fact / no-pricing checks.
+
+- Sight names: English or pinyin name + Chinese in brackets, e.g. `Wenshu Monastery (文殊院)`; keep quote inclusions in the name, e.g. `(incl. shuttle bus & audio guide)`.
+- Hotels: the hotel's own English name when known, with Chinese name in brackets; otherwise pinyin + Chinese. Star grade `4-Diamond`.
+- Meals in Day bar: `(B: Hotel ｜ L: Included ｜ D: Included)`, `X` for not included.
+- Body font: a Latin font (Arial) with SimSun as East Asian fallback for the bracketed Chinese.
+- Glossed local terms work well in English too: "*bai long men zhen* (a good long chat)".
 
 ---
 
@@ -258,6 +287,8 @@ $env:PYTHONIOENCODING='utf-8'
 | `scripts/generate_chaoshan6_voyage_style.py` | Worked example (潮汕6天) |
 | `scripts/generate_chaoshan6.py` | Legacy blue-table example (deprecated default) |
 | `scripts/generate_chongqing_sanxia8_voyage_style.py` | Worked example (重庆+三峡揽月 8D7N；可学习用户修改版样式 + 景点地点介绍) |
+| `scripts/generate_chengdu6_voyage_style.py` | Worked example (漫游成都6日；新加坡游客生动文案、Day 条 keep-with-next 防分页) |
+| `scripts/generate_chengdu6_voyage_style_en.py` | English edition of the Chengdu example (Arial + SimSun fallback, `Stay:` lines) |
 
 ## References
 
