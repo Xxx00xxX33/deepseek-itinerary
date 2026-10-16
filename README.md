@@ -19,12 +19,16 @@ deepseek-itinerary/
 ├── agents/openai.yaml                    # Skill metadata
 ├── scripts/
 │   ├── extract_doc.py                    # .doc text via olefile (WPS-safe)
+│   ├── audit_docx.py                     # Mechanical audit of the whole DOCX package vs quote
 │   ├── generate.py                       # Voyage-style generator template
 │   ├── generate_chaoshan6_voyage_style.py  # Worked example (潮汕 6 天)
-│   └── generate_chongqing_sanxia8_voyage_style.py  # 重庆+三峡揽月 8D7N
+│   ├── generate_chongqing_sanxia8_voyage_style.py  # 重庆+三峡揽月 8D7N
+│   ├── generate_chengdu6_voyage_style(_en).py      # 漫游成都6日（中/英）
+│   └── generate_guizhou7_voyage_style.py           # 多彩贵州7天（重庆进出）
 └── references/
     ├── formatting-guide.md               # Paragraph helpers, day-bar shading
-    └── fact-check.md                     # Pre-delivery checklist
+    ├── fact-check.md                     # Pre-delivery checklist
+    └── independent-audit.md              # Third-party auditor prompt + procedure
 ```
 
 ## How it works
@@ -34,6 +38,7 @@ deepseek-itinerary/
 3. **Parse** days, meals, hotels, pricing (optional), 赠送, contacts.
 4. **Fact-check** against the quote (`references/fact-check.md`).
 5. **Generate** DOCX by **cloning a known-good Voyage / user sample** as template shell (header/logo preserved), then writing paragraphs.
+6. **Independent audit** (mandatory) — `scripts/audit_docx.py` mechanical scan, then a **fresh third-party subagent** audits the DOCX against the quote and the user's constraints (`references/independent-audit.md`). Fix, re-audit, report the verdict to the user.
 
 ## Sight introductions
 
@@ -79,6 +84,7 @@ Output goes **next to the source file**, with an optional ASCII-name copy.
 | Word-open reliability | Clone known-good DOCX shell; clear body; rewrite paragraphs |
 | Style fidelity | Read fill/font/color from user sample XML when asked to 复刻 |
 | Quote fidelity | Checklist before save; 赠送 ≠ itinerary activity |
+| **Independent audit** | Fresh subagent audits every finished DOCX; writer never self-certifies |
 | **No pricing (default)** | Omit 报价与说明 / 团费数字 unless user explicitly requests prices |
 | Readability | Strip junk spaces around `·` `/`; use `、` / `→` / `｜` |
 

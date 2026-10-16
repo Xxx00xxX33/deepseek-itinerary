@@ -8,7 +8,8 @@ description: >
   12D11N东北草原-type docs — NOT the old blue table layout. Default client
   output is NO pricing block; include 团费/单间差 only when user explicitly asks.
   Source quote is the sole fact source: never invent sights, services, meals,
-  hotels, or prices.
+  hotels, or prices. Every finished itinerary must pass a third-party
+  independent audit (fresh subagent) before delivery.
 ---
 
 # Itinerary Generator (Voyage style)
@@ -19,6 +20,7 @@ From a supplier **报价 .doc** (or an existing draft DOCX), produce a **readabl
 2. Matches **Voyage Ventures paragraph-flow design** (teal day bars, 宿： lines).
 3. **Opens reliably in Word** by cloning a known-good template shell.
 4. **Replicates fonts/colors exactly** when the user points at a modified sample DOCX.
+5. **Passes a third-party independent audit** before it is handed to the user (step 7).
 
 ## Absolute rules (fact fidelity)
 | Rule | Detail |
@@ -30,6 +32,8 @@ From a supplier **报价 .doc** (or an existing draft DOCX), produce a **readabl
 | Prices exact when included | If pricing is on: copy RMB figures, 单间差, 小费, 儿童政策, 有效期 verbatim |
 | No extra nights label | If quote says「6天」do not invent「5晚」unless nights are explicit |
 | Output to source dir | Write `.docx` next to the source file (and optional ASCII-name copy) |
+| **Independent audit** | After generating, run `scripts/audit_docx.py` **and** a third-party audit by a fresh subagent that did not write the itinerary (step 7). Not done until the audit passes |
+| Meals = quote's meal column | Day bar lists only the meals in the quote's 餐食 column, by name, **without** 餐标 numbers. Do not add「早：酒店早餐」or「X」slots the quote doesn't list;「早餐后」stays in the narrative only |
 | Style clone | If user says「按某某行程排版 / 学习这个修改好的版本 / 完全复刻字体颜色」, open **that DOCX as the template shell** and match its run colors/fonts |
 
 ---
@@ -111,7 +115,7 @@ Global:
 - 赠送、备注（非价格）、联系人
 - 报价、单间差、16免1、儿童、小费、有效期：**仅当用户明确要求含报价时**解析并写入
 
-### 4. Fact-check before save (mandatory)
+### 4. Fact-check before save (mandatory; the independent audit in step 7 comes after)
 
 Checklist — every item must pass:
 
@@ -185,11 +189,31 @@ doc.save(output_path)
 
 Keeps company **header/logo**, section margins, theme.
 
+**Clean template metadata.** The shell carries the template's author, dates and page/word counts in `docProps`. Reset core properties (title = itinerary title, author/last-modified-by empty, dates = now) and strip `app.xml` statistics — see `reset_core_properties` / `strip_app_statistics` in `scripts/generate_guizhou7_voyage_style.py`.
+
 ### 6. Output
 
 - Primary: same folder as source, Chinese product name
 - Copies: English / short ASCII names for path-sensitive tools
 - If primary path is locked (Word open), save `_无报价` / ASCII copy then retry overwrite
+
+### 7. Third-party independent audit (mandatory, before delivery)
+
+The writer cannot audit their own copy — it reads what it meant, not what it says. After the DOCX is saved:
+
+1. **Mechanical scan** (fast, catches leaks):
+
+   ```bash
+   python -X utf8 scripts/audit_docx.py "行程.docx" _quote_extract.txt
+   ```
+
+   Scans the **whole package** (body, header/footer, `docProps`, comments) for supplier phone/QQ/name, 餐标 numbers, price words, promise words, and 【景点】 not in the quote. Lists every number in the body for manual sourcing. Exit 1 = fix first.
+
+2. **Independent auditor**: spawn a **fresh subagent** (Agent tool, no fork of this conversation) with only: the source quote path + `_quote_extract.txt`, the DOCX path, and the user's constraints verbatim. Use the prompt in `references/independent-audit.md`. It is read-only and returns 通过/不通过 + findings (违规 / 风险 / 建议) with quotes and evidence.
+
+3. **Fix → re-audit**: fix every 违规 and 风险 (or explain to the user why one stays), regenerate, rerun step 1, and send the changed passages back to the same auditor until it passes.
+
+4. **Report** to the user: audit verdict, what was changed because of it, and facts the auditor flagged as needing human verification (景点年代/数据、不熟悉的景点). Never claim "audited" if the auditor didn't run.
 
 ---
 
@@ -209,6 +233,8 @@ Client readers are mostly **Singapore travelers**. Dry encyclopedia-style blurbs
 | Explain local terms | Dialect or cultural words get a bracket gloss for overseas readers:「摆龙门阵（聊天）」「巴适（舒服惬意）」 |
 | Not allowed | Whole blurb = itinerary restatement（「游览XXX」「上午参观XXX」） |
 | Facts guard | Describing what exists at a place（小吃、相亲角、酒吧街）is fine; never phrase it as an included service, meal, show or gift unless the quote says so. Quote-listed inclusions（电瓶车+讲解器、含茶）may be woven into the scene |
+| No implied extras | Audit lessons: no sub-attraction the quote doesn't list as something they「can do」（黄果树「还能穿行水帘洞」✗）; no accessories beyond the listed experience（苗服体验 ≠「银饰叮当」）; no guaranteed season effects（百里杜鹃写「每年春季花开时节」, not「穿行花海」）; no「入夜后灯火通明」for a stop the quote doesn't time at night |
+| Unfamiliar / shop sights | Keep quote labels such as「（景中店）」verbatim and point them out to the user. If you can't verify a sight, keep its intro short and generic — no invented details（图腾、手工艺…）— and list it for human verification |
 
 Example (good — vivid):
 
@@ -238,7 +264,7 @@ When asked for an English DOCX: same structure (Day bars, 【Sight】 paragraphs
 
 - Sight names: English or pinyin name + Chinese in brackets, e.g. `Wenshu Monastery (文殊院)`; keep quote inclusions in the name, e.g. `(incl. shuttle bus & audio guide)`.
 - Hotels: the hotel's own English name when known, with Chinese name in brackets; otherwise pinyin + Chinese. Star grade `4-Diamond`.
-- Meals in Day bar: `(B: Hotel ｜ L: Included ｜ D: Included)`, `X` for not included.
+- Meals in Day bar: only the slots the quote's meal column lists, e.g. `(L: Included ｜ D: Included)`; use `B: Hotel` / `X` only when the quote's meal column itself has those slots.
 - Body font: a Latin font (Arial) with SimSun as East Asian fallback for the bracketed Chinese.
 - Glossed local terms work well in English too: "*bai long men zhen* (a good long chat)".
 
@@ -283,14 +309,17 @@ $env:PYTHONIOENCODING='utf-8'
 | File | Role |
 |------|------|
 | `scripts/extract_doc.py` | Extract text from `.doc` via olefile |
+| `scripts/audit_docx.py` | Mechanical audit of the whole DOCX package vs the quote (step 7.1) |
 | `scripts/generate.py` | **Template** — Voyage-style generator (edit data, run) |
 | `scripts/generate_chaoshan6_voyage_style.py` | Worked example (潮汕6天) |
 | `scripts/generate_chaoshan6.py` | Legacy blue-table example (deprecated default) |
 | `scripts/generate_chongqing_sanxia8_voyage_style.py` | Worked example (重庆+三峡揽月 8D7N；可学习用户修改版样式 + 景点地点介绍) |
 | `scripts/generate_chengdu6_voyage_style.py` | Worked example (漫游成都6日；新加坡游客生动文案、Day 条 keep-with-next 防分页) |
 | `scripts/generate_chengdu6_voyage_style_en.py` | English edition of the Chengdu example (Arial + SimSun fallback, `Stay:` lines) |
+| `scripts/generate_guizhou7_voyage_style.py` | Worked example (多彩贵州7天，重庆进出；餐栏只列报价餐名、经独立审计修正后的文案) |
 
 ## References
 
 - `references/formatting-guide.md` — paragraph helpers, day-bar shading, template clear-body
 - `references/fact-check.md` — pre-delivery checklist
+- `references/independent-audit.md` — third-party auditor prompt and procedure
