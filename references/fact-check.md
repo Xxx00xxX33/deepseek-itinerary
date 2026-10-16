@@ -35,6 +35,7 @@ Run this **before** saving the final DOCX. Quote text (or `_quote_extract.txt`) 
 [ ] 每日餐名与报价一致（含「自理」）
 [ ] 餐标数字一致（如 烤鸭60、晚宴150、火锅100）— 或按指定草稿省略数字
 [ ] 餐次代码（三餐 / 早午 / 仅早 / 仅晚）与报价膳食栏一致
+[ ] Day 条只列报价膳食栏里有的餐次；未自行补「早：酒店早餐」「晚：X」
 [ ] 膳食汇总段（若有）与分日内容不矛盾
 ```
 
@@ -49,6 +50,8 @@ Run this **before** saving the final DOCX. Quote text (or `_quote_extract.txt`) 
 [ ] 方言/文化词已加括号释义（摆龙门阵（聊天））
 [ ] 每日概述有主题句，未编造上午/傍晚等时段
 [ ] 介绍未新增报价没有的服务 / 门票 / 表演
+[ ] 未暗示报价未列的子景点可去（「还能穿行水帘洞」）、体验附带物（苗服≠银饰）、必然花期、夜间时段
+[ ] 报价原文标注（如「景中店」）原样保留并告知用户；无法核实的景点只写概括性介绍
 ```
 
 ## 赠送 vs 行程内
@@ -83,6 +86,21 @@ Run this **before** saving the final DOCX. Quote text (or `_quote_extract.txt`) 
 [ ] 标题 #1A6B5E、副标 #555555、亮点/美食常见 #008080
 [ ] 【景点名】与 宿： 为深绿加粗
 [ ] 未混用错误 Day 底色（如样例是 2E8B7A 却写成 008080 底）
+```
+
+## Package metadata
+
+```
+[ ] docProps/core.xml 标题已改为本行程；作者等元数据无供应商信息
+[ ] 页眉页脚为我方公司信息，无供应商电话/地址
+```
+
+## Independent audit (mandatory, after this checklist)
+
+```
+[ ] python -X utf8 scripts/audit_docx.py 行程.docx _quote_extract.txt → 无命中
+[ ] 第三方独立审计（全新子代理，见 references/independent-audit.md）→ 通过
+[ ] 审计发现已修正并复审；保留项和需人工核实项已告知用户
 ```
 
 ## Readability (not facts, still block delivery)
